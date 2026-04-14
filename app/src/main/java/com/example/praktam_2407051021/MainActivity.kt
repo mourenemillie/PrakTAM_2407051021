@@ -33,19 +33,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.praktam_2407051021.model.JournalSection
 import com.example.praktam_2407051021.model.JournallingSource
+import com.example.praktam_2407051021.ui.theme.PraktiktamTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MaterialTheme {
+            PraktiktamTheme {
                 DaftarJournalScreen()
             }
         }
@@ -55,44 +54,40 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun DaftarJournalScreen(modifier: Modifier = Modifier) {
     val dummyJournal = JournallingSource.dummyJournal
-    val beigeBackground = Color(0xFFEBE3D5)
     
-    // implementasi LazyColumn per modul 6
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(beigeBackground)
+            // Refactor LKP 7: pake variable theme pengatur visual pusat
+            .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding(),
         contentPadding = PaddingValues(top = 24.dp, start = 20.dp, end = 20.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // scope item buat naruh header dan LazyRow
         item {
             Text(
                 text = "Bloom.ly \uD83C\uDF38",
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = Color(0xFF8A817C),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
-            
+
             Text(
                 text = "Daily Check-in",
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 32.sp,
-                color = Color(0xFF3E3E3E),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 24.dp)
             )
             
             Text(
                 text = "Recent Highlights",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF3E3E3E),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // LazyRow untuk menampilkan row item secara horizontal
+            // LazyRow
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -105,14 +100,12 @@ fun DaftarJournalScreen(modifier: Modifier = Modifier) {
 
             Text(
                 text = "Today's Log",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF3E3E3E),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
         }
         
-        // scope function items buat nampilin daftar section entry jurnal utama
         items(dummyJournal) { section ->
             DetailScreen(section = section)
         }
@@ -123,9 +116,13 @@ fun DaftarJournalScreen(modifier: Modifier = Modifier) {
                 onClick = { /* TODO: fitur simpan */ },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8A817C))
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text(text = "Save Entry", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(
+                    text = "Save Entry", 
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
             }
         }
     }
@@ -133,12 +130,12 @@ fun DaftarJournalScreen(modifier: Modifier = Modifier) {
 
 @Composable
 fun HighlightRowItem(section: JournalSection) {
-    // Card dipakai untuk list item horizontal (komponen wajib modul 6)
+    // Card dipakai untuk list item horizontal
     Card(
         modifier = Modifier.width(140.dp),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column {
             Image(
@@ -152,9 +149,8 @@ fun HighlightRowItem(section: JournalSection) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(
                     text = section.sectionName,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF5A5A5A)
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -163,42 +159,37 @@ fun HighlightRowItem(section: JournalSection) {
 
 @Composable
 fun DetailScreen(section: JournalSection) {
-    // nyimpen state tombol love
     var isFavorite by remember { mutableStateOf(false) }
 
-    // Memasukkan seluruh bagian kolom ke dalam Card sesuai modul 6
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
                 text = section.sectionName,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp,
-                color = Color(0xFF5A5A5A)
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface
             )
             
             Spacer(modifier = Modifier.height(12.dp))
             
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // pake Box biar icon love bisa numpuk di atas gambar
                 Box {
                     // gambar thumbnail
                     Image(
                         painter = painterResource(id = section.gambar),
                         contentDescription = section.sectionName,
                         modifier = Modifier
-                            .size(80.dp) // size dipasin biar button muat
+                            .size(80.dp)
                             .clip(RoundedCornerShape(8.dp)),
                         contentScale = ContentScale.Crop
                     )
                     
-                    // button love ditaruh di pojok kanan atas
                     IconButton(
                         onClick = { isFavorite = !isFavorite },
                         modifier = Modifier
@@ -210,7 +201,7 @@ fun DetailScreen(section: JournalSection) {
                         Icon(
                             imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                             contentDescription = "Favorite Icon",
-                            tint = if (isFavorite) Color.Red else Color.White,
+                            tint = if (isFavorite) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surface,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -220,8 +211,8 @@ fun DetailScreen(section: JournalSection) {
                 
                 Text(
                     text = section.content,
-                    fontSize = 15.sp,
-                    color = Color.Black,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -232,7 +223,7 @@ fun DetailScreen(section: JournalSection) {
 @Preview(showBackground = true)
 @Composable
 fun DaftarJournalPreview() {
-    MaterialTheme {
+    PraktiktamTheme {
         DaftarJournalScreen()
     }
 }
