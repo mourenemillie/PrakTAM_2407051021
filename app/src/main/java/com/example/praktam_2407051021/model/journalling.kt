@@ -1,12 +1,7 @@
 package com.example.praktam_2407051021.model
 
-data class Journalling(
-    val nama: String,
-    val tanggal: String,
-    val mantra: String,
-    val people: String,
-    val perasaan: String,
-    val kegiatan: String,
-    val kenangan: String,
+data class JournalSection(
+    val sectionName: String,
+    val content: String,
     val gambar: Int
 )
