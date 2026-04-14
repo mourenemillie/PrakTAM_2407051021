@@ -21,6 +21,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -53,7 +62,16 @@ fun DaftarJournalScreen(modifier: Modifier = Modifier) {
             .verticalScroll(rememberScrollState())
             .padding(top = 48.dp, start = 20.dp, end = 20.dp, bottom = 24.dp)
     ) {
-        // Main title for the Daily Check-in
+
+        Text(
+            text = "Bloom.ly \uD83C\uDF38",
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            color = Color(0xFF8A817C),
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+        
+        // judul utama halaman
         Text(
             text = "Daily Check-in",
             fontWeight = FontWeight.ExtraBold,
@@ -64,7 +82,7 @@ fun DaftarJournalScreen(modifier: Modifier = Modifier) {
                 .fillMaxWidth()
         )
         
-        // Loop over the 5 sections
+        // looping data jurnal buat nampilin tiap section
         dummyJournal.forEach { section ->
             DetailScreen(section = section)
             Spacer(modifier = Modifier.height(16.dp))
@@ -85,7 +103,10 @@ fun DaftarJournalScreen(modifier: Modifier = Modifier) {
 
 @Composable
 fun DetailScreen(section: JournalSection) {
-    // Making it look like the white blocks in the reference image
+    // nyimpen state tombol love (LKP 4)
+    var isFavorite by remember { mutableStateOf(false) }
+
+    // kotak putih rounded buat tiap item
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -103,15 +124,35 @@ fun DetailScreen(section: JournalSection) {
         Spacer(modifier = Modifier.height(12.dp))
         
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Incorporating the image as a small thumbnail to legally satisfy the module constraints without ruining the design
-            Image(
-                painter = painterResource(id = section.gambar),
-                contentDescription = section.sectionName,
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
+            // pake Box biar icon love bisa numpuk di atas gambar
+            Box {
+                // gambar thumbnail
+                Image(
+                    painter = painterResource(id = section.gambar),
+                    contentDescription = section.sectionName,
+                    modifier = Modifier
+                        .size(80.dp) // size dipasin biar button muat
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                
+                // button love ditaruh di pojok kanan atas
+                IconButton(
+                    onClick = { isFavorite = !isFavorite },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(32.dp)
+                        .padding(2.dp)
+                ) {
+                    // ganti icon & warna kl diklik
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                        contentDescription = "Favorite Icon",
+                        tint = if (isFavorite) Color.Red else Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
             
             Spacer(modifier = Modifier.width(16.dp))
             
