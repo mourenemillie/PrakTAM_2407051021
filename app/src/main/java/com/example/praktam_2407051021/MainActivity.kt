@@ -39,6 +39,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import androidx.compose.runtime.LaunchedEffect
 import com.example.praktam_2407051021.model.JournalSection
 import com.example.praktam_2407051021.model.JournallingSource
 import com.example.praktam_2407051021.ui.theme.PraktiktamTheme
@@ -59,59 +61,103 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun DaftarJournalScreen(modifier: Modifier = Modifier) {
-    val dummyJournal = JournallingSource.dummyJournal
-    
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .statusBarsPadding(),
-        contentPadding = PaddingValues(top = 24.dp, start = 20.dp, end = 20.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item {
-            Text(
-                text = "Bloom.ly \uD83C\uDF38",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
+    var journals by remember { mutableStateOf<List<JournalSection>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var isError by remember { mutableStateOf(false) }
 
-            Text(
-                text = "Daily Check-in",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
-            
-            Text(
-                text = "Recent Highlights",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(dummyJournal) { section ->
-                    HighlightRowItem(section = section)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Text(
-                text = "Today's Log",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+    LaunchedEffect(Unit) {
+        try {
+            delay(1500) // Simulasi loading
+            journals = JournallingSource.dummyJournal
+            isLoading = false
+            isError = false
+        } catch (e: Exception) {
+            isLoading = false
+            isError = true
         }
-        
-        items(dummyJournal) { section ->
-            DetailScreen(section = section)
+    }
+
+    if (isLoading) {
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    } else if (isError || journals.isEmpty()) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Gagal Memuat Data",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color.Red
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Pastikan koneksi internet Anda menyala",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    } else {
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .statusBarsPadding(),
+            contentPadding = PaddingValues(top = 24.dp, start = 20.dp, end = 20.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                Text(
+                    text = "Bloom.ly \uD83C\uDF38",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+
+                Text(
+                    text = "Daily Check-in",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+                
+                Text(
+                    text = "Recent Highlights",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(journals) { section ->
+                        HighlightRowItem(section = section)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Text(
+                    text = "Today's Log",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+            
+            items(journals) { section ->
+                DetailScreen(section = section)
+            }
         }
     }
 }
@@ -125,9 +171,11 @@ fun HighlightRowItem(section: JournalSection) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column {
-            Image(
-                painter = painterResource(id = section.gambar),
+            AsyncImage(
+                model = section.imageUrl,
                 contentDescription = section.sectionName,
+                placeholder = painterResource(id = R.drawable.header),
+                error = painterResource(id = R.drawable.header),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(90.dp),
@@ -171,9 +219,11 @@ fun DetailScreen(section: JournalSection) {
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box {
-                        Image(
-                            painter = painterResource(id = section.gambar),
+                        AsyncImage(
+                            model = section.imageUrl,
                             contentDescription = section.sectionName,
+                            placeholder = painterResource(id = R.drawable.header),
+                            error = painterResource(id = R.drawable.header),
                             modifier = Modifier
                                 .size(80.dp)
                                 .clip(RoundedCornerShape(8.dp)),
