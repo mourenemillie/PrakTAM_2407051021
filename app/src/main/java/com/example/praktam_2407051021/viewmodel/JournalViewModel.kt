@@ -20,11 +20,11 @@ class JournalViewModel : ViewModel() {
     private val _isError = MutableStateFlow(false)
     val isError: StateFlow<Boolean> = _isError.asStateFlow()
 
+    private val repository = JournalRepository()
+
     init {
         fetchJournalsFromApi()
     }
-
-    private val repository = JournalRepository()
 
     private fun fetchJournalsFromApi() {
         viewModelScope.launch {

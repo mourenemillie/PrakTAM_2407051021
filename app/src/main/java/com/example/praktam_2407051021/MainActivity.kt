@@ -34,9 +34,12 @@ import com.example.praktam_2407051021.ui.screens.*
 import com.example.praktam_2407051021.ui.theme.PraktiktamTheme
 import com.example.praktam_2407051021.viewmodel.JournalViewModel
 
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        installSplashScreen()
         enableEdgeToEdge()
         setContent {
             PraktiktamTheme {

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- Latar belakang Splash Screen (mengikuti warna hex #F1E8D9) -->
+        <item name="windowSplashScreenBackground">#F1E8D9</item>
+        <!-- Logo Bunga Bloom.ly -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_bloom_logo</item>
+        <!-- Tema yang digunakan setelah Splash Screen selesai -->
+        <item name="postSplashScreenTheme">@style/Theme.PrakTAM_2407051021</item>
+    </style>
+</resources>
