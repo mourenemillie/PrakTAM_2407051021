@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
@@ -28,6 +27,12 @@ import androidx.navigation.NavController
 import androidx.compose.ui.graphics.Color
 import coil.compose.AsyncImage
 import com.example.praktam_2407051021.viewmodel.JournalViewModel
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun DetailScreen(
@@ -38,25 +43,20 @@ fun DetailScreen(
     val note = viewModel.getNoteById(journalId)
     var isFavorite by remember { mutableStateOf(false) }
 
+    var isLoading by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
     if (note == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Journal not found", color = PrimaryText)
+            Text("Journal not found", color = MaterialTheme.colorScheme.onBackground)
         }
         return
     }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.popBackStack() },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = CircleShape
-            ) {
-                Icon(Icons.Default.Check, contentDescription = "Done")
-            }
-        }
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -67,29 +67,27 @@ fun DetailScreen(
             item {
                 Text(
                     text = "Bloom.ly \uD83C\uDF38",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryText,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 8.dp)) {
-                    Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(14.dp), tint = SecondaryText)
+                    Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSecondary)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(note.date, fontSize = 12.sp, color = SecondaryText)
+                    Text(note.date, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondary)
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(14.dp), tint = SecondaryText)
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSecondary)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(note.musicTrack.replace("\n", " - "), fontSize = 12.sp, color = SecondaryText)
+                    Text(note.musicTrack.replace("\n", " - "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondary)
                 }
 
                 Text(
                     text = "Daily Check-in",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryText,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
@@ -99,11 +97,11 @@ fun DetailScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = note.gratefulFor,
-                    fontSize = 14.sp,
-                    color = PrimaryText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White, RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
                         .padding(16.dp)
                 )
             }
@@ -115,7 +113,7 @@ fun DetailScreen(
                 ) {
                     Card(
                         modifier = Modifier.weight(1f),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
@@ -147,21 +145,20 @@ fun DetailScreen(
 
                     Card(
                         modifier = Modifier.weight(1f),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(
                                 text = note.mantra,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = PrimaryText,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onBackground,
                                 modifier = Modifier.weight(1f)
                             )
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 PinkHeader("-Daily Mantra-", modifier = Modifier.weight(1f))
                                 Box(
-                                    modifier = Modifier.size(24.dp).background(PinkAccent, CircleShape),
+                                    modifier = Modifier.size(24.dp).background(Color(0xFFFAD1D8), CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text("✨", fontSize = 10.sp)
@@ -195,7 +192,7 @@ fun DetailScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -203,10 +200,38 @@ fun DetailScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = "\"${note.wantToRemember}\"",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = PrimaryText
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
+                    }
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            isLoading = true
+                            delay(2000)
+                            snackbarHostState.showSnackbar("Jurnal berhasil disimpan & tersinkronisasi!")
+                            isLoading = false
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    enabled = !isLoading,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Memproses...", color = MaterialTheme.colorScheme.onPrimary)
+                    } else {
+                        Text("Simpan Perubahan", color = MaterialTheme.colorScheme.onPrimary)
                     }
                 }
             }
@@ -218,10 +243,10 @@ fun DetailScreen(
 fun PinkHeader(text: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .background(PinkAccent, RoundedCornerShape(4.dp))
+            .background(Color(0xFFFAD1D8), RoundedCornerShape(4.dp))
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
-        Text(text = text, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = PrimaryText)
+        Text(text = text, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
     }
 }
 
@@ -229,7 +254,7 @@ fun PinkHeader(text: String, modifier: Modifier = Modifier) {
 fun ListCard(title: String, items: List<String>, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -238,8 +263,8 @@ fun ListCard(title: String, items: List<String>, modifier: Modifier = Modifier) 
             items.forEach { item ->
                 Text(
                     text = "• $item",
-                    fontSize = 12.sp,
-                    color = PrimaryText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }

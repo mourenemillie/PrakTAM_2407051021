@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -32,11 +31,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.praktam_2407051021.model.JournalNote
+import com.example.praktam_2407051021.data.model.JournalNote
 import com.example.praktam_2407051021.ui.navigation.Screen
 import com.example.praktam_2407051021.viewmodel.JournalViewModel
 
-// Figma Colors
 val CardWhite = Color(0xFFFFFFFF)
 val PrimaryText = Color(0xFF2A2A2A)
 val SecondaryText = Color(0xFF797470)
@@ -53,6 +51,9 @@ fun HomeScreen(
 ) {
     val journals by viewModel.journalNotes.collectAsState()
 
+    val isLoading by viewModel.isLoading.collectAsState()
+    val isError by viewModel.isError.collectAsState()
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -67,86 +68,119 @@ fun HomeScreen(
                 containerColor = BrownButton,
                 contentColor = Color.White,
                 shape = CircleShape,
-                modifier = Modifier.padding(bottom = 80.dp) // Supaya tidak tertutup bottom nav
+                modifier = Modifier.padding(bottom = 80.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Journal")
             }
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp) // padding bottom for bottom nav
-        ) {
-            item {
-                Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-                    Text(
-                        text = "Daily Check-in",
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    Text(
-                        text = "Take a deep breath. Your space awaits.",
-                        fontSize = 16.sp,
-                        color = SecondaryText,
-                        modifier = Modifier.padding(bottom = 32.dp)
-                    )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = BrownButton)
+            }
+        } else if (isError || journals.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Gagal Memuat Data",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Red
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Pastikan koneksi internet Anda menyala",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        } else {
+            // Tampilan Utama Jurnal
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp) // padding bottom for bottom nav
+            ) {
+                item {
+                    Column(modifier = Modifier.padding(horizontal = 24.dp)) {
                         Text(
-                            text = "Recent Highlights",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onBackground
+                            text = "Daily Check-in",
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.padding(bottom = 8.dp)
                         )
                         Text(
-                            text = "View all",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
+                            text = "Take a deep breath. Your space awaits.",
+                            fontSize = 16.sp,
                             color = SecondaryText,
-                            modifier = Modifier.clickable { }
+                            modifier = Modifier.padding(bottom = 32.dp)
                         )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Recent Highlights",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Text(
+                                text = "View all",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = SecondaryText,
+                                modifier = Modifier.clickable { }
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
+                }
+
+                item {
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(journals) { note ->
+                            HighlightCard(note = note)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
+
+                item {
+                    Text(
+                        text = "Recently Log",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp)
+                    )
+                }
+
+                items(journals) { note ->
+                    LogCard(
+                        note = note,
+                        onClick = { navController.navigate(Screen.Detail.createRoute(note.id)) },
+                        onEditClick = { navController.navigate(Screen.AddEdit.createRoute(note.id)) }
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
-            }
-
-            item {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(journals) { note ->
-                        HighlightCard(note = note)
-                    }
-                }
-                Spacer(modifier = Modifier.height(32.dp))
-            }
-
-            item {
-                Text(
-                    text = "Recently Log",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp)
-                )
-            }
-
-            items(journals) { note ->
-                LogCard(
-                    note = note, 
-                    onClick = { navController.navigate(Screen.Detail.createRoute(note.id)) },
-                    onEditClick = { navController.navigate(Screen.AddEdit.createRoute(note.id)) }
-                )
-                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
@@ -237,11 +271,10 @@ fun HighlightCard(note: JournalNote) {
     }
 }
 
-// LogCard dikembalikan ke layout awal yang ada thumbnail di kiri dan love button di gambar
 @Composable
 fun LogCard(note: JournalNote, onClick: () -> Unit, onEditClick: () -> Unit) {
     var isFavorite by remember { mutableStateOf(false) }
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -262,7 +295,6 @@ fun LogCard(note: JournalNote, onClick: () -> Unit, onEditClick: () -> Unit) {
                             .clip(RoundedCornerShape(12.dp)),
                         contentScale = ContentScale.Crop
                     )
-                    // Love icon
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
@@ -273,9 +305,9 @@ fun LogCard(note: JournalNote, onClick: () -> Unit, onEditClick: () -> Unit) {
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            Icons.Default.Favorite, 
-                            contentDescription = "Favorite", 
-                            tint = if (isFavorite) Color.Red else Color.LightGray, 
+                            Icons.Default.Favorite,
+                            contentDescription = "Favorite",
+                            tint = if (isFavorite) Color.Red else Color.LightGray,
                             modifier = Modifier.size(20.dp)
                         )
                     }

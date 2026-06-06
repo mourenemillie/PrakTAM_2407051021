@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.praktam_2407051021.model.JournalNote
+import com.example.praktam_2407051021.data.model.JournalNote
 import com.example.praktam_2407051021.viewmodel.JournalViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
