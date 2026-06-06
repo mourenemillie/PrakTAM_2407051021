@@ -4,48 +4,35 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import androidx.compose.runtime.LaunchedEffect
-import com.example.praktam_2407051021.model.JournalSection
-import com.example.praktam_2407051021.model.JournallingSource
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.example.praktam_2407051021.ui.navigation.Screen
+import com.example.praktam_2407051021.ui.screens.*
 import com.example.praktam_2407051021.ui.theme.PraktiktamTheme
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.example.praktam_2407051021.viewmodel.JournalViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,252 +40,134 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PraktiktamTheme {
-                DaftarJournalScreen()
+                JournalApp()
             }
         }
     }
 }
 
 @Composable
-fun DaftarJournalScreen(modifier: Modifier = Modifier) {
-    var journals by remember { mutableStateOf<List<JournalSection>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var isError by remember { mutableStateOf(false) }
+fun JournalApp() {
+    val navController = rememberNavController()
+    val viewModel: JournalViewModel = viewModel()
+    
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+    
+    val showBottomBar = currentDestination?.route == Screen.Home.route || 
+                        currentDestination?.route == Screen.Profile.route
 
-    LaunchedEffect(Unit) {
-        try {
-            delay(1500) // Simulasi loading
-            journals = JournallingSource.dummyJournal
-            isLoading = false
-            isError = false
-        } catch (e: Exception) {
-            isLoading = false
-            isError = true
-        }
-    }
-
-    if (isLoading) {
-        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-    } else if (isError || journals.isEmpty()) {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(32.dp),
-            contentAlignment = Alignment.Center
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Home.route,
+            modifier = Modifier.fillMaxSize()
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Gagal Memuat Data",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = Color.Red
+            composable(Screen.Home.route) {
+                HomeScreen(navController = navController, viewModel = viewModel)
+            }
+            composable(Screen.Profile.route) {
+                ProfileScreen(navController = navController)
+            }
+            composable(Screen.Detail.route) { backStackEntry ->
+                val journalId = backStackEntry.arguments?.getString("journalId")
+                journalId?.let { DetailScreen(navController = navController, viewModel = viewModel, journalId = it) }
+            }
+            composable(Screen.AddEdit.route) { backStackEntry ->
+                val journalId = backStackEntry.arguments?.getString("journalId")
+                val isNew = journalId == "new" || journalId == null
+                AddEditScreen(
+                    navController = navController, 
+                    viewModel = viewModel, 
+                    journalId = if (isNew) null else journalId
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Pastikan koneksi internet Anda menyala",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
+            }
+            composable(Screen.Appearance.route) {
+                AppearanceScreen(navController = navController)
+            }
+            composable(Screen.MoodHistory.route) {
+                MoodHistoryScreen(navController = navController)
+            }
+            composable(Screen.MusicSoundtrack.route) {
+                MusicSoundtrackScreen(navController = navController)
             }
         }
-    } else {
-        LazyColumn(
-            modifier = modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .statusBarsPadding(),
-            contentPadding = PaddingValues(top = 24.dp, start = 20.dp, end = 20.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                Text(
-                    text = "Bloom.ly \uD83C\uDF38",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
 
-                Text(
-                    text = "Daily Check-in",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(bottom = 24.dp)
-                )
-                
-                Text(
-                    text = "Recent Highlights",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(journals) { section ->
-                        HighlightRowItem(section = section)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                Text(
-                    text = "Today's Log",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
-            
-            items(journals) { section ->
-                DetailScreen(section = section)
-            }
-        }
-    }
-}
-
-@Composable
-fun HighlightRowItem(section: JournalSection) {
-    Card(
-        modifier = Modifier.width(140.dp),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column {
-            AsyncImage(
-                model = section.imageUrl,
-                contentDescription = section.sectionName,
-                placeholder = painterResource(id = R.drawable.header),
-                error = painterResource(id = R.drawable.header),
+        if (showBottomBar) {
+            CustomBottomBar(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(90.dp),
-                contentScale = ContentScale.Crop
+                    .align(Alignment.BottomCenter)
+                    .padding(24.dp),
+                currentRoute = currentDestination?.route,
+                onNavigate = { route ->
+                    navController.navigate(route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             )
-            Column(modifier = Modifier.padding(12.dp)) {
-                Text(
-                    text = section.sectionName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
         }
     }
 }
 
 @Composable
-fun DetailScreen(section: JournalSection) {
-    var isFavorite by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    Box(modifier = Modifier.fillMaxWidth()) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+fun CustomBottomBar(
+    modifier: Modifier = Modifier,
+    currentRoute: String?,
+    onNavigate: (String) -> Unit
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(72.dp),
+        shape = RoundedCornerShape(36.dp),
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = section.sectionName,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                
-                Spacer(modifier = Modifier.height(12.dp))
-                
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box {
-                        AsyncImage(
-                            model = section.imageUrl,
-                            contentDescription = section.sectionName,
-                            placeholder = painterResource(id = R.drawable.header),
-                            error = painterResource(id = R.drawable.header),
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-                        
-                        IconButton(
-                            onClick = { isFavorite = !isFavorite },
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .size(32.dp)
-                                .padding(2.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                                contentDescription = "Favorite Icon",
-                                tint = if (isFavorite) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surface,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.width(16.dp))
-                    
-                    Text(
-                        text = section.content,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = {
-                        coroutineScope.launch {
-                            isLoading = true              
-                            delay(2000)                   
-                            snackbarHostState.showSnackbar(  
-                                "Log ${section.sectionName} berhasil diproses!"
-                            )
-                            isLoading = false             
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading,
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Memproses...", color = MaterialTheme.colorScheme.onPrimary)
-                    } else {
-                        Text("Simpan Entri", color = MaterialTheme.colorScheme.onPrimary)
-                    }
-                }
-            }
+            BottomNavItem(
+                icon = Icons.Default.Home,
+                label = "Home",
+                isSelected = currentRoute == Screen.Home.route,
+                onClick = { onNavigate(Screen.Home.route) }
+            )
+            BottomNavItem(
+                icon = Icons.Default.Person,
+                label = "Profile",
+                isSelected = currentRoute == Screen.Profile.route,
+                onClick = { onNavigate(Screen.Profile.route) }
+            )
         }
-        
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun DaftarJournalPreview() {
-    PraktiktamTheme {
-        DaftarJournalScreen()
+fun BottomNavItem(
+    icon: ImageVector,
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val backgroundColor = if (isSelected) PinkAccent else Color.Transparent
+    val contentColor = if (isSelected) PrimaryText else SecondaryText
+
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(24.dp))
+            .background(backgroundColor)
+            .clickable { onClick() }
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(icon, contentDescription = label, tint = contentColor, modifier = Modifier.size(24.dp))
+        Text(text = label, fontSize = 12.sp, color = contentColor)
     }
 }
